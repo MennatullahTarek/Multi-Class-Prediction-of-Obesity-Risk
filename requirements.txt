@@ -1,0 +1,9 @@
+IPython
+gdown
+matplotlib
+numpy
+pandas
+scikit-learn
+seaborn
+warnings
+xgboost
