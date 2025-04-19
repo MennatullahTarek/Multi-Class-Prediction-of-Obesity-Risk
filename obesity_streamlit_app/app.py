@@ -118,7 +118,29 @@ if submit:
     prediction = model.predict(df)
     label = encoder_target.inverse_transform(prediction.reshape(-1, 1))
 
-    # 🎉 Output
-    st.success(f"🎉 Your Predicted Obesity Risk Level is: **{label[0]}**")
-    st.balloons()
-    st.markdown("Stay healthy and take care of yourself! 💚")
+   
+# 🎉 Output
+st.markdown("""
+    <div style='
+        background-color: #f0f2f6;
+        border-left: 6px solid #4CAF50;
+        padding: 20px;
+        border-radius: 10px;
+        margin-top: 20px;
+    '>
+        <h3 style='color: #4CAF50;'>
+            🎯 Prediction Result
+        </h3>
+        <p style='font-size: 20px; color: #333333;'>
+            Your Predicted <strong>Obesity Risk Level</strong> is:
+        </p>
+        <p style='font-size: 26px; font-weight: bold; color: #FF4B4B;'>
+            {}</p>
+        <p style='color: #555555;'>
+            Stay healthy and take care of yourself! 💚
+        </p>
+    </div>
+""".format(label[0]), unsafe_allow_html=True)
+
+st.balloons()
+
