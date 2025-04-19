@@ -120,7 +120,7 @@ if submit:
 
    
    # 🎉 Output
-predicted_label = label[0].replace("_", " ")  # Replace underscores with spaces
+predicted_label = label[0]
 st.markdown("## 🎯 Prediction Result")
 st.markdown(f"""
 <div style='
