@@ -119,23 +119,9 @@ if submit:
     label = encoder_target.inverse_transform(prediction.reshape(-1, 1))
 
    
-# 🎉 Output
-st.markdown("## 🎯 Prediction Result")
-st.markdown(f"""
-<div style='
-    background-color: #e6f2ff;
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-    color: #003366;
-'>
-    Your Predicted Obesity Risk Level is: <br> <span style='color:#FF4B4B'>{label[0]}</span>
-</div>
-""", unsafe_allow_html=True)
-
-st.markdown("### ✅ Stay healthy and take care of yourself! 💚")
-st.balloons()
+    # 🎉 Output
+    st.success(f"🎉 Your Predicted Obesity Risk Level is: **{label[0]}**")
+    st.balloons()
+    st.markdown("Stay healthy and take care of yourself! 💚")
 
 
