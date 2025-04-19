@@ -106,7 +106,7 @@ if submit:
     df = pd.DataFrame(input_dict)
 
     # 🛠️ Transform
-    col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'CH2O', 'FAF', 'TUE']
+    col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'NCP', 'CH2O', 'FAF', 'TUE']
     df[col_numerical] = scaler.transform(df[col_numerical])
     df['CAEC'] = encoder_CAEC.transform(df[['CAEC']])
     df['MTRANS'] = encoder_MTRANS.transform(df[['MTRANS']])
