@@ -5,7 +5,7 @@ It uses a trained machine learning model based on XGBoost.
 
 ## 🚀 Try it Online
 
-You can try the app live [here](LINK_TO_YOUR_STREAMLIT_APP) 🌐
+You can try the app live [here]([LINK_TO_YOUR_STREAMLIT_APP](https://multi-class-prediction-of-obesity-risk-cmgulnccrkzuatwa8llcoo.streamlit.app/#obesity-risk-classifier)) 🌐
 
 ## 📝 How to Use
 
