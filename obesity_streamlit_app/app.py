@@ -120,27 +120,22 @@ if submit:
 
    
 # 🎉 Output
-st.markdown("""
-    <div style='
-        background-color: #f0f2f6;
-        border-left: 6px solid #4CAF50;
-        padding: 20px;
-        border-radius: 10px;
-        margin-top: 20px;
-    '>
-        <h3 style='color: #4CAF50;'>
-            🎯 Prediction Result
-        </h3>
-        <p style='font-size: 20px; color: #333333;'>
-            Your Predicted <strong>Obesity Risk Level</strong> is:
-        </p>
-        <p style='font-size: 26px; font-weight: bold; color: #FF4B4B;'>
-            {}</p>
-        <p style='color: #555555;'>
-            Stay healthy and take care of yourself! 💚
-        </p>
-    </div>
-""".format(label[0]), unsafe_allow_html=True)
+st.markdown("## 🎯 Prediction Result")
+st.markdown(f"""
+<div style='
+    background-color: #e6f2ff;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    color: #003366;
+'>
+    Your Predicted Obesity Risk Level is: <br> <span style='color:#FF4B4B'>{label[0]}</span>
+</div>
+""", unsafe_allow_html=True)
 
+st.markdown("### ✅ Stay healthy and take care of yourself! 💚")
 st.balloons()
+
 
