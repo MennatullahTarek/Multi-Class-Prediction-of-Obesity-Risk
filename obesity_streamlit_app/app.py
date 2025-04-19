@@ -120,7 +120,7 @@ if submit:
 
    
     # 🎉 Output
-    predicted_label = label[0]
+    predicted_label = label[0].replace("[""]", " ")
     st.success(f"🎉 Your Predicted Obesity Risk Level is: **{predicted_label}**")
     st.balloons()
     st.markdown("Stay healthy and take care of yourself! 💚")
