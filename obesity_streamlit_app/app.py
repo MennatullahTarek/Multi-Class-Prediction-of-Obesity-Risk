@@ -102,6 +102,8 @@ if submit:
 
     df = pd.DataFrame(input_dict)
 
+
+    
     # 🔧 Preprocessing
     col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'CH2O', 'FAF', 'TUE']
     df[col_numerical] = scaler.transform(df[col_numerical])
