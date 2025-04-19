@@ -7,7 +7,7 @@ import pandas as pd
 import pickle
 
 # 🎉 Title and description
-st.set_page_config(page_title="Obesity Risk Classifier", page_icon="🏋️", layout="centered")
+st.set_page_config(page_title="Obesity Risk Classifier", layout="centered")
 st.title("\ud83c\udfcb\ufe0f Obesity Risk Classifier")
 st.markdown("""
 Welcome to the **Obesity Risk Predictor**! 🌟
