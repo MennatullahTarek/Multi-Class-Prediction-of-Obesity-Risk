@@ -40,6 +40,7 @@ label_gender.handle_unknown = 'ignore'  # Handle unknown categories for gender
 label_FAVC.handle_unknown = 'ignore'  # Handle unknown categories for FAVC
 label_SCC.handle_unknown = 'ignore'  # Handle unknown categories for SCC
 label_smoke.handle_unknown = 'ignore'  # Handle unknown categories for SMOKE
+ordinal_CALC.handle_unknown = 'ignore'  # Handle unknown categories for CALC
 
 # 🎉 Sidebar
 with st.sidebar:
