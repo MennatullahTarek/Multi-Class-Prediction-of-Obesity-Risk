@@ -6,6 +6,7 @@ import pandas as pd
 import pickle
 import os
 
+st.write("Current working directory:", os.getcwd())
 
 
 # 🧠 Load model and tools
