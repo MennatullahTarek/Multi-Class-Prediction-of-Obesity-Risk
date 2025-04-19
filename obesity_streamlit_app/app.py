@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-
 import streamlit as st
 import numpy as np
 import pandas as pd
-import pickle
+import joblib
 import os
 
 # Get the current directory of this script
@@ -14,34 +13,25 @@ def load_pickle(filename):
     filepath = os.path.join(BASE_DIR, filename)
     if os.path.exists(filepath):
         with open(filepath, 'rb') as f:
-            return pickle.load(f)
+            return joblib.load(f)
     else:
         st.error(f"❌ File not found: {filename}")
         raise FileNotFoundError(f"{filename} not found in {BASE_DIR}")
 
 # 🔄 Load model and tools
 model = load_pickle('model.pkl')
-scaler = load_pickle('scaler.pkl')
-encoder_CAEC = load_pickle('encoder_CAEC.pkl')
-encoder_MTRANS = load_pickle('encoder_MTRANS.pkl')
+scaler = load_pickle('scaler.pkl')  # If you used scaling
+encoder_CAEC = load_pickle('encoder_caec.pkl')
+encoder_MTRANS = load_pickle('encoder_mtrans.pkl')
 encoder_history = load_pickle('encoder_history.pkl')
 label_gender = load_pickle('label_gender.pkl')
-ordinal_CALC = load_pickle('ordinal_CALC.pkl')
-label_FAVC = load_pickle('label_FAVC.pkl')
-label_SCC = load_pickle('label_SCC.pkl')
+ordinal_CALC = load_pickle('encoder_calc.pkl')
+label_FAVC = load_pickle('label_favc.pkl')
+label_SCC = load_pickle('label_scc.pkl')
 label_smoke = load_pickle('label_smoke.pkl')
-encoder_target = load_pickle('target_encoder.pkl')
+encoder_target = load_pickle('target_encoder.pkl')  # Assuming you encoded your y labels
 
-# Handle unknown categories in encoders
-encoder_CAEC.handle_unknown = 'ignore'  # Handle unknown categories for CAEC
-encoder_MTRANS.handle_unknown = 'ignore'  # Handle unknown categories for MTRANS
-encoder_history.handle_unknown = 'ignore'  # Handle unknown categories for family_history_with_overweight
-label_gender.handle_unknown = 'ignore'  # Handle unknown categories for gender
-label_FAVC.handle_unknown = 'ignore'  # Handle unknown categories for FAVC
-label_SCC.handle_unknown = 'ignore'  # Handle unknown categories for SCC
-label_smoke.handle_unknown = 'ignore'  # Handle unknown categories for SMOKE
-
-# 🎉 Sidebar
+# 🎨 Sidebar
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3875/3875029.png", width=100)
     st.markdown("## 🤖 About the App")
@@ -65,8 +55,8 @@ with st.form("user_form"):
         Weight = st.number_input("⚖️ Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
 
     with col2:
-        family_history_with_overweight = st.selectbox("👨‍👩‍👧 Family History with Overweight", ['Yes', 'No'])
-        FAVC = st.selectbox("🍔 Frequent High-Calorie Food (FAVC)", ['Yes', 'No'])
+        family_history_with_overweight = st.selectbox("👨‍👩‍👧 Family History with Overweight", ['yes', 'no'])
+        FAVC = st.selectbox("🍔 Frequent High-Calorie Food (FAVC)", ['yes', 'no'])
         FCVC = st.slider("🥦 Vegetable Consumption Frequency (1-3)", 1.0, 3.0, 2.0)
         NCP = st.slider("🍽️ Meals per Day", 1.0, 5.0, 3.0)
 
@@ -74,21 +64,21 @@ with st.form("user_form"):
     col3, col4 = st.columns(2)
 
     with col3:
-        CAEC = st.selectbox("🍫 Snacking Frequency (CAEC)", ['Never', 'Sometimes', 'Frequently', 'Always'])
-        SMOKE = st.selectbox("🚬 Do you smoke?", ['Yes', 'No'])
+        CAEC = st.selectbox("🍫 Snacking Frequency (CAEC)", ['no', 'Sometimes', 'Frequently', 'Always'])
+        SMOKE = st.selectbox("🚬 Do you smoke?", ['yes', 'no'])
         CH2O = st.slider("💧 Water Intake (liters)", 0.0, 5.0, 2.0)
 
     with col4:
-        SCC = st.selectbox("📉 Calorie Monitoring (SCC)", ['Yes', 'No'])
+        SCC = st.selectbox("📉 Calorie Monitoring (SCC)", ['yes', 'no'])
         FAF = st.slider("🏋️‍♂️ Physical Activity (0-3)", 0.0, 3.0, 1.0)
         TUE = st.slider("📱 Time on Devices (0-2)", 0.0, 2.0, 1.0)
 
-    CALC = st.selectbox("🍷 Alcohol Consumption", ['Never', 'Sometimes', 'Frequently', 'Always'])
-    MTRANS = st.selectbox("🚌 Main Transport Mode", ['Public_Transportation', 'Walking', 'Automobile', 'Motorbike', 'Bike'])
+    CALC = st.selectbox("🍷 Alcohol Consumption", ['no', 'Sometimes', 'Frequently', 'Always'])
+    MTRANS = st.selectbox("🚌 Main Transport Mode", ['Walking', 'Bike', 'Motorbike', 'Public_Transportation', 'Automobile'])
 
     submit = st.form_submit_button("🔍 Predict My Risk!")
 
-# 🧠 Prediction logic
+# 🔮 Prediction
 if submit:
     input_dict = {
         'Gender': [Gender],
@@ -111,11 +101,10 @@ if submit:
 
     df = pd.DataFrame(input_dict)
 
-    # 🛠️ Transform
+    # 🔄 Apply transformations
     col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'NCP', 'CH2O', 'FAF', 'TUE']
-    df[col_numerical] = scaler.transform(df[col_numerical])
+    df[col_numerical] = scaler.transform(df[col_numerical])  # Assuming you saved it
 
-    # Transform categorical data
     df['CAEC'] = encoder_CAEC.transform(df[['CAEC']])
     df['MTRANS'] = encoder_MTRANS.transform(df[['MTRANS']])
     df['family_history_with_overweight'] = encoder_history.transform(df[['family_history_with_overweight']])
@@ -125,16 +114,11 @@ if submit:
     df['SCC'] = label_SCC.transform(df['SCC'])
     df['SMOKE'] = label_smoke.transform(df['SMOKE'])
 
-    # 🔮 Prediction
+    # 🧠 Predict
     prediction = model.predict(df)
+    label = encoder_target.inverse_transform(prediction.reshape(-1, 1))
 
-    # Reshape prediction to 2D array (single sample, single prediction)
-    prediction_reshaped = prediction.reshape(-1, 1)
-
-    # Inverse transform the prediction
-    label = encoder_target.inverse_transform(prediction_reshaped)
-
-    # ✅ Output
+    # 🎉 Output
     st.success(f"🎉 Your Predicted Obesity Risk Level is: **{label[0]}**")
     st.balloons()
     st.markdown("Stay healthy and take care of yourself! 💚")
