@@ -40,7 +40,6 @@ label_gender.handle_unknown = 'ignore'  # Handle unknown categories for gender
 label_FAVC.handle_unknown = 'ignore'  # Handle unknown categories for FAVC
 label_SCC.handle_unknown = 'ignore'  # Handle unknown categories for SCC
 label_smoke.handle_unknown = 'ignore'  # Handle unknown categories for SMOKE
-ordinal_CALC.handle_unknown = 'ignore'  # Handle unknown categories for CALC
 
 # 🎉 Sidebar
 with st.sidebar:
@@ -116,28 +115,24 @@ if submit:
     col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'NCP', 'CH2O', 'FAF', 'TUE']
     df[col_numerical] = scaler.transform(df[col_numerical])
 
-    # Handle unseen categories for LabelEncoder
-    def safe_transform(encoder, feature, column):
-        try:
-            return encoder.transform(df[[feature]])
-        except ValueError:
-            st.warning(f"⚠️ Unseen category detected in {column}. Using default value.")
-            # Use the first class in label_encoder.classes_ if an unseen category is detected
-            return encoder.transform([encoder.classes_[0]])
-
-    # Transform categorical data safely
-    df['CAEC'] = safe_transform(encoder_CAEC, 'CAEC', 'Snacking Frequency')
-    df['MTRANS'] = safe_transform(encoder_MTRANS, 'MTRANS', 'Main Transport Mode')
-    df['family_history_with_overweight'] = safe_transform(encoder_history, 'family_history_with_overweight', 'Family History with Overweight')
-    df['Gender'] = safe_transform(label_gender, 'Gender', 'Gender')
-    df['CALC'] = safe_transform(ordinal_CALC, 'CALC', 'Alcohol Consumption')
-    df['FAVC'] = safe_transform(label_FAVC, 'FAVC', 'Frequent High-Calorie Food')
-    df['SCC'] = safe_transform(label_SCC, 'SCC', 'Calorie Monitoring')
-    df['SMOKE'] = safe_transform(label_smoke, 'SMOKE', 'Do you smoke?')
+    # Transform categorical data
+    df['CAEC'] = encoder_CAEC.transform(df[['CAEC']])
+    df['MTRANS'] = encoder_MTRANS.transform(df[['MTRANS']])
+    df['family_history_with_overweight'] = encoder_history.transform(df[['family_history_with_overweight']])
+    df['Gender'] = label_gender.transform(df['Gender'])
+    df['CALC'] = ordinal_CALC.transform(df[['CALC']])
+    df['FAVC'] = label_FAVC.transform(df['FAVC'])
+    df['SCC'] = label_SCC.transform(df['SCC'])
+    df['SMOKE'] = label_smoke.transform(df['SMOKE'])
 
     # 🔮 Prediction
     prediction = model.predict(df)
-    label = encoder_target.inverse_transform(prediction)
+
+    # Reshape prediction to 2D array (single sample, single prediction)
+    prediction_reshaped = prediction.reshape(-1, 1)
+
+    # Inverse transform the prediction
+    label = encoder_target.inverse_transform(prediction_reshaped)
 
     # ✅ Output
     st.success(f"🎉 Your Predicted Obesity Risk Level is: **{label[0]}**")
