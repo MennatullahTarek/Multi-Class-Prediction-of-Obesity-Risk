@@ -4,17 +4,21 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import pickle
-
 import os
-print("available:", os.listdir())
+
 
 st.set_page_config(page_title="Obesity Risk Classifier", layout="centered")
 st.title(" Obesity Risk Classifier ")
 
 # 🧠 Load model and tools
 def load_pickle(filename):
-    with open(filename, 'rb') as f:
-        return pickle.load(f)
+    if os.path.exists(filename):
+        with open(filename, 'rb') as f:
+            return pickle.load(f)
+    else:
+        print(f"File {filename} not found!")
+        # Handle the error or load a default model
+
 
 model = load_pickle('model.pkl')
 scaler = load_pickle('scaler.pkl')
