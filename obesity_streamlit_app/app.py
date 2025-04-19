@@ -116,15 +116,23 @@ if submit:
     col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'NCP', 'CH2O', 'FAF', 'TUE']
     df[col_numerical] = scaler.transform(df[col_numerical])
 
-    # Transform categorical data
-    df['CAEC'] = encoder_CAEC.transform(df[['CAEC']])
-    df['MTRANS'] = encoder_MTRANS.transform(df[['MTRANS']])
-    df['family_history_with_overweight'] = encoder_history.transform(df[['family_history_with_overweight']])
-    df['Gender'] = label_gender.transform(df['Gender'])
-    df['CALC'] = ordinal_CALC.transform(df[['CALC']])
-    df['FAVC'] = label_FAVC.transform(df['FAVC'])
-    df['SCC'] = label_SCC.transform(df['SCC'])
-    df['SMOKE'] = label_smoke.transform(df['SMOKE'])
+    # Handle unseen categories
+    def safe_transform(encoder, feature, column):
+        try:
+            return encoder.transform(df[[feature]])
+        except ValueError:
+            st.warning(f"⚠️ Unseen category detected in {column}. Using default value.")
+            return encoder.transform([encoder.categories_[0][0]])  # Using the first category as fallback
+
+    # Transform categorical data safely
+    df['CAEC'] = safe_transform(encoder_CAEC, 'CAEC', 'Snacking Frequency')
+    df['MTRANS'] = safe_transform(encoder_MTRANS, 'MTRANS', 'Main Transport Mode')
+    df['family_history_with_overweight'] = safe_transform(encoder_history, 'family_history_with_overweight', 'Family History with Overweight')
+    df['Gender'] = safe_transform(label_gender, 'Gender', 'Gender')
+    df['CALC'] = safe_transform(ordinal_CALC, 'CALC', 'Alcohol Consumption')
+    df['FAVC'] = safe_transform(label_FAVC, 'FAVC', 'Frequent High-Calorie Food')
+    df['SCC'] = safe_transform(label_SCC, 'SCC', 'Calorie Monitoring')
+    df['SMOKE'] = safe_transform(label_smoke, 'SMOKE', 'Do you smoke?')
 
     # 🔮 Prediction
     prediction = model.predict(df)
