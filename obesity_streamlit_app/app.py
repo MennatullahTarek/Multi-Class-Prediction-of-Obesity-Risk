@@ -7,8 +7,6 @@ import pickle
 import os
 
 
-st.set_page_config(page_title="Obesity Risk Classifier", layout="centered")
-st.title(" Obesity Risk Classifier ")
 
 # 🧠 Load model and tools
 def load_pickle(filename):
