@@ -36,10 +36,10 @@ encoder_target = load_pickle('target_encoder.pkl')
 encoder_CAEC.handle_unknown = 'ignore'  # Handle unknown categories for CAEC
 encoder_MTRANS.handle_unknown = 'ignore'  # Handle unknown categories for MTRANS
 encoder_history.handle_unknown = 'ignore'  # Handle unknown categories for family_history_with_overweight
-label_gender.classes_ = np.append(label_gender.classes_, ['Other'])  # If needed, append 'Other' class for gender
-label_FAVC.classes_ = np.append(label_FAVC.classes_, ['Other'])  # If needed, append 'Other' class for FAVC
-label_SCC.classes_ = np.append(label_SCC.classes_, ['Other'])  # If needed, append 'Other' class for SCC
-label_smoke.classes_ = np.append(label_smoke.classes_, ['Other'])  # If needed, append 'Other' class for SMOKE
+label_gender.handle_unknown = 'ignore'  # Handle unknown categories for gender
+label_FAVC.handle_unknown = 'ignore'  # Handle unknown categories for FAVC
+label_SCC.handle_unknown = 'ignore'  # Handle unknown categories for SCC
+label_smoke.handle_unknown = 'ignore'  # Handle unknown categories for SMOKE
 
 # 🎉 Sidebar
 with st.sidebar:
@@ -114,22 +114,6 @@ if submit:
     # 🛠️ Transform
     col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'NCP', 'CH2O', 'FAF', 'TUE']
     df[col_numerical] = scaler.transform(df[col_numerical])
-
-    # Check for unknown categories before transforming
-    def check_unknown_categories(encoder, column_data, column_name):
-        unknown_categories = set(column_data) - set(encoder.classes_)
-        if unknown_categories:
-            st.warning(f"⚠️ Unknown categories found in {column_name}: {unknown_categories}")
-
-    # Check categories before transforming
-    check_unknown_categories(encoder_CAEC, df['CAEC'], 'CAEC')
-    check_unknown_categories(encoder_MTRANS, df['MTRANS'], 'MTRANS')
-    check_unknown_categories(encoder_history, df['family_history_with_overweight'], 'family_history_with_overweight')
-    check_unknown_categories(label_gender, df['Gender'], 'Gender')
-    check_unknown_categories(ordinal_CALC, df['CALC'], 'CALC')
-    check_unknown_categories(label_FAVC, df['FAVC'], 'FAVC')
-    check_unknown_categories(label_SCC, df['SCC'], 'SCC')
-    check_unknown_categories(label_smoke, df['SMOKE'], 'SMOKE')
 
     # Transform categorical data
     df['CAEC'] = encoder_CAEC.transform(df[['CAEC']])
