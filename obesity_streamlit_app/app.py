@@ -5,6 +5,9 @@ import numpy as np
 import pandas as pd
 import pickle
 
+import os
+print("available:", os.listdir())
+
 st.set_page_config(page_title="Obesity Risk Classifier", layout="centered")
 st.title(" Obesity Risk Classifier ")
 
