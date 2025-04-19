@@ -1,140 +1,81 @@
-# -*- coding: utf-8 -*-
-
-import streamlit as st
-import numpy as np
 import pandas as pd
-import pickle
-import os
+import numpy as np
+import streamlit as st
+from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
-# Get the current directory of this script
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Function to handle unseen categories safely during transformation
+def safe_transform(encoder, df, feature, column):
+    try:
+        # Try to transform the feature using the encoder
+        return encoder.transform(df[[feature]])
+    except ValueError as e:
+        # If an unseen category is found, handle it by using the first category or a default value
+        st.warning(f"⚠️ Unseen category detected in {column}. Using default value.")
+        
+        # If the encoder is a LabelEncoder, we can use its classes_
+        if hasattr(encoder, 'classes_'):
+            default_value = encoder.classes_[0]  # Default to the first class
+            return encoder.transform([default_value])
+        else:
+            # Fallback if classes_ attribute is not available
+            return encoder.transform([encoder.categories_[0][0]])  # Using the first category from the encoder
 
-# ✅ Load pickle helper
-def load_pickle(filename):
-    filepath = os.path.join(BASE_DIR, filename)
-    if os.path.exists(filepath):
-        with open(filepath, 'rb') as f:
-            return pickle.load(f)
-    else:
-        st.error(f"❌ File not found: {filename}")
-        raise FileNotFoundError(f"{filename} not found in {BASE_DIR}")
+# Sample data loading (make sure you replace with your actual data loading process)
+# For this example, assuming the dataset has been pre-processed
+df = pd.read_csv('your_dataset.csv')  # Adjust the path to your dataset
 
-# 🔄 Load model and tools
-model = load_pickle('model.pkl')
-scaler = load_pickle('scaler.pkl')
-encoder_CAEC = load_pickle('encoder_CAEC.pkl')
-encoder_MTRANS = load_pickle('encoder_MTRANS.pkl')
-encoder_history = load_pickle('encoder_history.pkl')
-label_gender = load_pickle('label_gender.pkl')
-ordinal_CALC = load_pickle('ordinal_CALC.pkl')
-label_FAVC = load_pickle('label_FAVC.pkl')
-label_SCC = load_pickle('label_SCC.pkl')
-label_smoke = load_pickle('label_smoke.pkl')
-encoder_target = load_pickle('target_encoder.pkl')
+# Initializing LabelEncoder and OrdinalEncoder
+label_gender = LabelEncoder()
+label_FAVC = LabelEncoder()
+label_SCC = LabelEncoder()
+label_smoke = LabelEncoder()
 
-# Handle unknown categories in encoders
-encoder_CAEC.handle_unknown = 'ignore'  # Handle unknown categories for CAEC
-encoder_MTRANS.handle_unknown = 'ignore'  # Handle unknown categories for MTRANS
-encoder_history.handle_unknown = 'ignore'  # Handle unknown categories for family_history_with_overweight
-label_gender.handle_unknown = 'ignore'  # Handle unknown categories for gender
-label_FAVC.handle_unknown = 'ignore'  # Handle unknown categories for FAVC
-label_SCC.handle_unknown = 'ignore'  # Handle unknown categories for SCC
-label_smoke.handle_unknown = 'ignore'  # Handle unknown categories for SMOKE
+encoder_CAEC = OrdinalEncoder()
+encoder_MTRANS = OrdinalEncoder()
+encoder_history = LabelEncoder()
 
-# 🎉 Sidebar
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3875/3875029.png", width=100)
-    st.markdown("## 🤖 About the App")
-    st.markdown("""This app uses **Machine Learning** to predict your **Obesity Risk Level** based on your lifestyle and habits.
-    Fill out the form and hit **Predict** to see your result!""")
+# Fit the LabelEncoders on columns with categorical data
+label_gender.fit(df['Gender'])
+label_FAVC.fit(df['FAVC'])
+label_SCC.fit(df['SCC'])
+label_smoke.fit(df['SMOKE'])
+encoder_CAEC.fit(df[['CAEC']])  # For ordinal columns
+encoder_MTRANS.fit(df[['MTRANS']])
+encoder_history.fit(df['family_history_with_overweight'])
 
-# 🏷️ Title
-st.markdown("<h1 style='text-align: center; color: #FF4B4B;'>🍕 Obesity Risk Predictor 🍎</h1>", unsafe_allow_html=True)
-st.markdown("<h5 style='text-align: center; color: gray;'>A smarter way to understand your health.</h5>", unsafe_allow_html=True)
-st.write("---")
+# Transform categorical columns using the safe_transform function
+df['family_history_with_overweight'] = safe_transform(encoder_history, df, 'family_history_with_overweight', 'Family History with Overweight')
+df['Gender'] = safe_transform(label_gender, df, 'Gender', 'Gender')
+df['CALC'] = safe_transform(encoder_CAEC, df, 'CALC', 'Alcohol Consumption')
+df['FAVC'] = safe_transform(label_FAVC, df, 'FAVC', 'Frequent High-Calorie Food')
+df['SCC'] = safe_transform(label_SCC, df, 'SCC', 'Calorie Monitoring')
+df['SMOKE'] = safe_transform(label_smoke, df, 'SMOKE', 'Do you smoke?')
 
-# 📝 Input Form
-with st.form("user_form"):
-    st.subheader("👤 Personal Information")
-    col1, col2 = st.columns(2)
+# Split the dataset into features (X) and target (y)
+X = df.drop(columns=['target_column'])  # Replace 'target_column' with the actual column name for the target
+y = df['target_column']  # The target variable
 
-    with col1:
-        Gender = st.selectbox("👫 Gender", ['Male', 'Female'])
-        Age = st.slider("🎂 Age", 10, 100, 25)
-        Height = st.number_input("📏 Height (m)", min_value=1.0, max_value=2.5, value=1.65)
-        Weight = st.number_input("⚖️ Weight (kg)", min_value=30.0, max_value=200.0, value=70.0)
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    with col2:
-        family_history_with_overweight = st.selectbox("👨‍👩‍👧 Family History with Overweight", ['Yes', 'No'])
-        FAVC = st.selectbox("🍔 Frequent High-Calorie Food (FAVC)", ['Yes', 'No'])
-        FCVC = st.slider("🥦 Vegetable Consumption Frequency (1-3)", 1.0, 3.0, 2.0)
-        NCP = st.slider("🍽️ Meals per Day", 1.0, 5.0, 3.0)
+# Initialize and train the model (RandomForestClassifier as an example)
+model = RandomForestClassifier()
+model.fit(X_train, y_train)
 
-    st.subheader("🏃 Lifestyle & Habits")
-    col3, col4 = st.columns(2)
+# Make predictions
+y_pred = model.predict(X_test)
 
-    with col3:
-        CAEC = st.selectbox("🍫 Snacking Frequency (CAEC)", ['Never', 'Sometimes', 'Frequently', 'Always'])
-        SMOKE = st.selectbox("🚬 Do you smoke?", ['Yes', 'No'])
-        CH2O = st.slider("💧 Water Intake (liters)", 0.0, 5.0, 2.0)
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+st.success(f"🎉 Model Accuracy: {accuracy * 100:.2f}%")
 
-    with col4:
-        SCC = st.selectbox("📉 Calorie Monitoring (SCC)", ['Yes', 'No'])
-        FAF = st.slider("🏋️‍♂️ Physical Activity (0-3)", 0.0, 3.0, 1.0)
-        TUE = st.slider("📱 Time on Devices (0-2)", 0.0, 2.0, 1.0)
+# Display results
+label = label_FAVC.inverse_transform(y_pred)  # Using LabelEncoder to convert prediction back to original labels
+st.success(f"🎉 Your Predicted Obesity Risk Level is: **{label[0]}**")
+st.balloons()
 
-    CALC = st.selectbox("🍷 Alcohol Consumption", ['Never', 'Sometimes', 'Frequently', 'Always'])
-    MTRANS = st.selectbox("🚌 Main Transport Mode", ['Public_Transportation', 'Walking', 'Automobile', 'Motorbike', 'Bike'])
-
-    submit = st.form_submit_button("🔍 Predict My Risk!")
-
-# 🧠 Prediction logic
-if submit:
-    input_dict = {
-        'Gender': [Gender],
-        'Age': [Age],
-        'Height': [Height],
-        'Weight': [Weight],
-        'family_history_with_overweight': [family_history_with_overweight],
-        'FAVC': [FAVC],
-        'FCVC': [FCVC],
-        'NCP': [round(NCP)],
-        'CAEC': [CAEC],
-        'SMOKE': [SMOKE],
-        'CH2O': [CH2O],
-        'SCC': [SCC],
-        'FAF': [FAF],
-        'TUE': [TUE],
-        'CALC': [CALC],
-        'MTRANS': [MTRANS],
-    }
-
-    df = pd.DataFrame(input_dict)
-
-    # 🛠️ Transform
-    col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'NCP', 'CH2O', 'FAF', 'TUE']
-    df[col_numerical] = scaler.transform(df[col_numerical])
-
-    # Transform categorical data
-    df['CAEC'] = encoder_CAEC.transform(df[['CAEC']])
-    df['MTRANS'] = encoder_MTRANS.transform(df[['MTRANS']])
-    df['family_history_with_overweight'] = encoder_history.transform(df[['family_history_with_overweight']])
-    df['Gender'] = label_gender.transform(df['Gender'])
-    df['CALC'] = ordinal_CALC.transform(df[['CALC']])
-    df['FAVC'] = label_FAVC.transform(df['FAVC'])
-    df['SCC'] = label_SCC.transform(df['SCC'])
-    df['SMOKE'] = label_smoke.transform(df['SMOKE'])
-
-    # 🔮 Prediction
-    prediction = model.predict(df)
-
-    # Reshape prediction to 2D array (single sample, single prediction)
-    prediction_reshaped = prediction.reshape(-1, 1)
-
-    # Inverse transform the prediction
-    label = encoder_target.inverse_transform(prediction_reshaped)
-
-    # ✅ Output
-    st.success(f"🎉 Your Predicted Obesity Risk Level is: **{label[0]}**")
-    st.balloons()
-    st.markdown("Stay healthy and take care of yourself! 💚")
+# If needed, display the dataframe to check the transformations
+st.dataframe(df.head())  # Display the top rows of the dataframe
