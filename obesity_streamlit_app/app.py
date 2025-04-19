@@ -6,19 +6,20 @@ import pandas as pd
 import pickle
 import os
 
-st.write("Current working directory:", os.getcwd())
+# Get the current directory of this script
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-
-# 🧠 Load model and tools
+# ✅ Load pickle helper
 def load_pickle(filename):
-    if os.path.exists(filename):
-        with open(filename, 'rb') as f:
+    filepath = os.path.join(BASE_DIR, filename)
+    if os.path.exists(filepath):
+        with open(filepath, 'rb') as f:
             return pickle.load(f)
     else:
-        print(f"File {filename} not found!")
-        # Handle the error or load a default model
+        st.error(f"❌ File not found: {filename}")
+        raise FileNotFoundError(f"{filename} not found in {BASE_DIR}")
 
-
+# 🔄 Load model and tools
 model = load_pickle('model.pkl')
 scaler = load_pickle('scaler.pkl')
 encoder_CAEC = load_pickle('encoder_CAEC.pkl')
@@ -81,6 +82,7 @@ with st.form("user_form"):
 
     submit = st.form_submit_button("🔍 Predict My Risk!")
 
+# 🧠 Prediction logic
 if submit:
     input_dict = {
         'Gender': [Gender],
@@ -103,9 +105,7 @@ if submit:
 
     df = pd.DataFrame(input_dict)
 
-
-    
-    # 🔧 Preprocessing
+    # 🛠️ Transform
     col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'CH2O', 'FAF', 'TUE']
     df[col_numerical] = scaler.transform(df[col_numerical])
     df['CAEC'] = encoder_CAEC.transform(df[['CAEC']])
@@ -117,12 +117,11 @@ if submit:
     df['SCC'] = label_SCC.transform(df['SCC'])
     df['SMOKE'] = label_smoke.transform(df['SMOKE'])
 
-    # 🧠 Prediction
+    # 🔮 Prediction
     prediction = model.predict(df)
     label = encoder_target.inverse_transform(prediction)
 
-    # 🎯 Result
+    # ✅ Output
     st.success(f"🎉 Your Predicted Obesity Risk Level is: **{label[0]}**")
     st.balloons()
     st.markdown("Stay healthy and take care of yourself! 💚")
-
