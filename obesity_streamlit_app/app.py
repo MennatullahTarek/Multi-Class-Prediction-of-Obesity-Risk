@@ -116,13 +116,14 @@ if submit:
     col_numerical = ['Age', 'Height', 'Weight', 'FCVC', 'NCP', 'CH2O', 'FAF', 'TUE']
     df[col_numerical] = scaler.transform(df[col_numerical])
 
-    # Handle unseen categories
+    # Handle unseen categories for LabelEncoder
     def safe_transform(encoder, feature, column):
         try:
             return encoder.transform(df[[feature]])
         except ValueError:
             st.warning(f"⚠️ Unseen category detected in {column}. Using default value.")
-            return encoder.transform([encoder.categories_[0][0]])  # Using the first category as fallback
+            # Use the first class in label_encoder.classes_ if an unseen category is detected
+            return encoder.transform([encoder.classes_[0]])
 
     # Transform categorical data safely
     df['CAEC'] = safe_transform(encoder_CAEC, 'CAEC', 'Snacking Frequency')
